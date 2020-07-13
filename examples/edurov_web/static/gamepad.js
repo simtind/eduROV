@@ -102,11 +102,11 @@ function setPlaneMovementState(target_state) {
 
 function pollGamepad() {
     var gamepads = navigator.getGamepads();
-    if (gamepads.length == 0) {
+    if (gamepads.length <= gamepadIndex || gamepads[gamepadIndex] == null) {
         return;
     }
 
-    var gamepad = gamepads[0];
+    var gamepad = gamepads[gamepadIndex];
     var elevationAxis = gamepad.axes[1]
     var leftRightAxis = gamepad.axes[2]
     var forwardBackAxis = gamepad.axes[3]
