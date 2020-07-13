@@ -3,7 +3,7 @@
  * https://github.com/trolllabs/eduROV
  */
 
-var keycodes = {l:76, c:67, esc:27, enter:13};
+var keycodes = {l:76, c:67, esc:27, enter:13, w:87, a:65, s:83, d:68, q:81, e:69};
 var MOTOR_KEYS = [81, 87, 69, 65, 83, 68];
 var stat = {light:false, armed:false, roll_ui:true, cinema:false,
             video_rotation:0};
