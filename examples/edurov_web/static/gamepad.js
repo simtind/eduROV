@@ -100,6 +100,37 @@ function setPlaneMovementState(target_state) {
     planeMovementState = target_state;
 }
 
+function clearElevationState() {
+    if (elevationState == "up") {
+        send_keyup(keycodes.w);
+    }
+    else if (elevationState == "down") {
+        send_keyup(keycodes.s);
+    }
+
+    console.log("Clearing state " + elevationState);
+
+    elevationState = "idle";
+}
+
+function setPlaneMovementState(target_state) {
+    if (elevationState != target_state)
+    {
+        clearElevationState();
+
+        console.log("Set elevation state " + target_state);
+
+        if (target_state == "up") {
+            send_keydown(keycodes.w);
+        }
+        else if (target_state == "down") {
+            send_keydown(keycodes.s);
+        }
+    }
+
+    elevationState = target_state;
+}
+
 function pollGamepad() {
     var gamepads = navigator.getGamepads();
     if (gamepads.length <= gamepadIndex || gamepads[gamepadIndex] == null) {
@@ -131,34 +162,13 @@ function pollGamepad() {
     cinema_pressed = buttonPressed(cinemaButton);
 
     if (elevationAxis > sensitivity) {
-        // Going up
-
-        // Meaning, we're no longer going down
-        if (elevationState == "down") {
-            send_keyup(keycodes.s);
-        }
-
-        // And we should start going up if we weren't
-        if (elevationState != "up") {
-            send_keydown(keycodes.w);
-        }
-
-        elevationState = "up";
+        setElevationState("up");
     }
     else if (elevationAxis < -sensitivity) {
-        // Going down
-
-        // Meaning, we're no longer going up
-        if (elevationState == "up") {
-            send_keyup(keycodes.w);
-        }
-
-        // And we should start going down if we weren't
-        if (elevationState != "down") {
-            send_keydown(keycodes.s);
-        }
-
-        elevationState = "down";
+        setElevationState("down");
+    }
+    else {
+        setElevationState("idle");
     }
 
     if (forwardBackAxis > sensitivity) {
