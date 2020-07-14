@@ -156,6 +156,8 @@ function pollGamepad() {
 
     if (buttonPressed(armedButton) && !armed_pressed) {
         toggle_armed();
+        setPlaneMovementState("idle");
+        setElevationState("idle");
     }
     armed_pressed = buttonPressed(armedButton);
 
