@@ -2,7 +2,10 @@ import argparse
 import sys
 
 from edurov.utils import valid_resolution, check_requirements
-from .start import main
+try:
+    from .start import main
+except ModuleNotFoundError:
+    from start import main
 
 
 def edurov_web(args=None):
