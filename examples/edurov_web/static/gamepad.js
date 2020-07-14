@@ -113,7 +113,7 @@ function clearElevationState() {
     elevationState = "idle";
 }
 
-function setPlaneMovementState(target_state) {
+function setElevationState(target_state) {
     if (elevationState != target_state)
     {
         clearElevationState();
