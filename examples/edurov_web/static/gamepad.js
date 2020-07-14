@@ -77,6 +77,10 @@ function setPlaneMovementState(target_state) {
     {
         clearPlaneMovementState();
 
+        if (target_state != "idle" && !stat.armed) {
+            return;
+        }
+
         console.log("Set state " + target_state);
 
         if (target_state == "forward") {
@@ -117,6 +121,10 @@ function setElevationState(target_state) {
     if (elevationState != target_state)
     {
         clearElevationState();
+
+        if (target_state != "idle" && !stat.armed) {
+            return;
+        }
 
         console.log("Set elevation state " + target_state);
 
