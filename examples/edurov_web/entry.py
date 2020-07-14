@@ -1,4 +1,5 @@
 import argparse
+import sys
 
 from edurov.utils import valid_resolution, check_requirements
 from .start import main
@@ -39,3 +40,7 @@ def edurov_web(args=None):
             fps=args.fps,
             server_port=args.port,
             debug=args.debug)
+
+
+if __name__ == '__main__':
+    edurov_web()
