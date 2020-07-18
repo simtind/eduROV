@@ -20,14 +20,14 @@ document.onkeyup = function(evt) {
 
 function send_keydown(keycode){
     var xhttp = new XMLHttpRequest();
-    xhttp.open("GET", "/keydown="+keycode, true);
+    xhttp.open("POST", "/keydown" true);
     xhttp.setRequestHeader("Content-Type", "text/html");
-    xhttp.send(null);
+    xhttp.send(str(keycode));
 }
 
 function send_keyup(keycode){
     var xhttp = new XMLHttpRequest();
-    xhttp.open("GET", "/keyup="+keycode, true);
+    xhttp.open("POST", "/keyup", true);
     xhttp.setRequestHeader("Content-Type", "text/html");
-    xhttp.send(null);
+    xhttp.send(str(keycode));
 }

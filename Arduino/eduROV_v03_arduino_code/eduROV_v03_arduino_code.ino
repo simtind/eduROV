@@ -11,6 +11,8 @@
    Provided as-is and free to be modified as you see fit.
 */
 
+#include "TimerOne.h"
+
 //Sensor pins:
 #define pressPin A0
 #define tempPin A1
@@ -70,6 +72,8 @@ void setup() {
 
   digitalWrite(ledPin, LOW);
 
+  Timer1.initialize(1000);
+  Timer1.attachInterrupt(updateOutput);
 }
 
 void loop() {
@@ -78,6 +82,7 @@ void loop() {
     input = receive_signal();
     //Test print to verify input, use for debugging only
     //Serial.println(input);
+    setOutput(input);
   }
 
   //Reading sensors
@@ -92,7 +97,4 @@ void loop() {
     printSensorValues();
     //Serial.println(temp);
   }
-  updateOutput(input);
-
 }
-

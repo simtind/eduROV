@@ -57,14 +57,6 @@ class RequestHandler(server.BaseHTTPRequestHandler):
             self.serve_stream()
         elif self.path.startswith('/http') or self.path.startswith('/www'):
             self.redirect(self.path[1:])
-        elif self.path.startswith('/keyup'):
-            self.send_response(200)
-            self.end_headers()
-            self.keys.keyup(key=int(self.path.split('=')[1]))
-        elif self.path.startswith('/keydown'):
-            self.send_response(200)
-            self.end_headers()
-            self.keys.keydown(key=int(self.path.split('=')[1]))
         elif self.path.startswith('/sensor.json'):
             self.serve_rov_data('sensor')
         elif self.path.startswith('/actuator.json'):
@@ -96,7 +88,50 @@ class RequestHandler(server.BaseHTTPRequestHandler):
                 self.send_404()
 
     def do_POST(self):
-        self.send_404()
+
+        content_len = self.headers.get('Content-Length', None)
+        if self.headers.get('Content-Type', 'invalid') == 'application/json':
+            try:
+                if content_len is None:
+                    self.send_411()  # Data length required
+
+                post_body = json.loads(self.rfile.read(int(content_len)))
+
+                if self.path.startswith('/actuator.json'):
+                    self.set_rov_data('actuator', post_body)
+                else:
+                    raise ValueError(f'Bad request. Could not find target {self.path}.')
+                self.send_response(200)
+            except json.JSONDecodeError as ex:
+                message = f'Could not parse JSON request. Got error: {str(ex)}'
+                warning(message=message, filter='default')
+                self.send_error(422, message)
+            except ValueError as ex:
+                message = f'An error occurred while handling JSON content. Got error: {str(ex)}'
+                warning(message=message, filter='default')
+                self.send_error(400, message)
+            finally:
+                self.end_headers()
+
+        else:
+            try:
+                if self.path == '/':
+                    raise ValueError(f'Unknown path {self.path}. {self.requestline}.')
+                elif self.path.startswith('/keyup'):
+                    if content_len is None:
+                        self.send_411()  # Data length required
+                    self.keys.keyup(key=int(self.rfile.read(int(content_len))))
+                elif self.path.startswith('/keydown'):
+                    if content_len is None:
+                        self.send_411()  # Data length required
+                    self.keys.keydown(key=int(self.rfile.read(int(content_len))))
+                self.send_response(200)
+            except ValueError as ex:
+                message = f'An error occurred while handling request. Got error: {str(ex)}'
+                warning(message=message, filter='default')
+                self.send_error(400, message)
+            finally:
+                self.end_headers()
 
     def serve_content(self, content, content_type='text/html'):
         self.send_response(200)
@@ -135,6 +170,12 @@ class RequestHandler(server.BaseHTTPRequestHandler):
             warning('Unable to process data_type {}'.format(data_type))
         content = values.encode('utf-8')
         self.serve_content(content, 'application/json')
+
+    def set_rov_data(self, data_type, values):
+        if data_type == 'actuator':
+            self.rov.actuator = json.loads(values)
+        else:
+            warning('Unable to process data_type {}'.format(data_type))
 
     def serve_stream(self):
         self.send_response(200)

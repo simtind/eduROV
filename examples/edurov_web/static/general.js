@@ -5,12 +5,14 @@
 
 var keycodes = {l:76, c:67, esc:27, enter:13, w:87, a:65, s:83, d:68, q:81, e:69};
 var MOTOR_KEYS = [81, 87, 69, 65, 83, 68];
-var stat = {light:false, armed:false, roll_ui:true, cinema:false,
+var stat = {armed:false, roll_ui:true, cinema:false,
             video_rotation:0};
 var sensors = {time:0, temp:0, pressure:0, humidity:0, pitch:0, roll:0, yaw:0,
             tempWater:0, pressureWater:0, batteryVoltage:0, free_space:0,
             cpu_temp:0};
 var critical = {voltage:10.0, disk_space:500.0, cpu_temp:80.0};
+
+var actuators = {vertical:0.0, port:0.0, starboard:0.0, lights:0.0}
 
 var sensor_interval = 500;
 var interval;
@@ -19,32 +21,25 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function send_keydown(keycode){
+function postActuators() {
     var xhttp = new XMLHttpRequest();
-    xhttp.open("GET", "/keydown="+keycode, true);
-    xhttp.setRequestHeader("Content-Type", "text/html");
-    xhttp.send(null);
+    xhttp.open("POST", "/actuator", true);
+    xhttp.setRequestHeader("Content-Type", "application/json");
+    xhttp.onreadystatechange = function () {
+        if (xhttp.readyState === 4 && xhttp.status === 200) {
+            var json = JSON.parse(xhttp.responseText);
+            console.log(json.vertical + ", " + json.port + ", " + json.starboard);
+        }
+    };
+    var data = JSON.stringify(actuators);
+    xhttp.send(data);
 }
 
-function handle_in_browser(keycode){
-    if (MOTOR_KEYS.indexOf(keycode) > -1 && !stat.armed){
-        if (confirm("The ROV is not armed, do you want to arm it?")) {
-            toggle_armed();
-        }
-        return true;
-    } else if (keycode == keycodes.l){
-        toggle_light();
-        return true;
-    } else if (keycode == keycodes.enter){
-        toggle_armed();
-        return true;
-    } else if (keycode == keycodes.esc && stat.cinema){
-        toggle_cinema();
-        return true;
-    } else if (keycode == keycodes.c){
-        toggle_cinema();
-        return true;
-    }
+function send_keydown(keycode){
+    var xhttp = new XMLHttpRequest();
+    xhttp.open("POST", "/keydown", true);
+    xhttp.setRequestHeader("Content-Type", "text/html");
+    xhttp.send(str(keycode));
 }
 
 function toggle_cinema(){
@@ -52,15 +47,18 @@ function toggle_cinema(){
     set_cinema(stat.cinema);
 }
 
-function toggle_light(){
+function toggle_light(should_post_actuators=false){
     var btn = document.getElementById("lightBtn");
-    if(stat.light){
+    if(actuators['lights'] == 1.0){
         btn.className = btn.className.replace(" active", "");
     }else{
         btn.className += " active";
     }
-    stat.light = !stat.light;
-    send_keydown(keycodes.l);
+    actuators['lights'] = actuators['lights'] == 1.0 ? 0.0 : 1.0;
+
+    if (should_post_actuators) {
+        postActuators();
+    }
 }
 
 function toggle_armed(){
@@ -99,7 +97,7 @@ function toggle_roll(){
 
 function stop_rov(){
     var xhttp = new XMLHttpRequest();
-    xhttp.open("GET", "stop", true);
+    xhttp.open("POST", "stop", true);
     xhttp.setRequestHeader("Content-Type", "application/text");
     xhttp.send();
 }

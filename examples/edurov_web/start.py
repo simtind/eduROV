@@ -23,41 +23,30 @@ def valid_arduino_string(arduino_string):
 
 
 def arduino():
-    lastState = '0000'
     ser = serial_connection()
-    # 'letter': [position, value]
-    config = {'w': [0, 1],
-              's': [0, 2],
-              'a': [1, 1],
-              'q': [1, 2],
-              'd': [2, 1],
-              'e': [2, 2]}
-    with Pyro4.Proxy("PYRONAME:KeyManager") as keys:
-        with Pyro4.Proxy("PYRONAME:ROVSyncer") as rov:
-            keys.set_mode(key='l', mode='toggle')
-            while rov.run:
-                dic = keys.qweasd_dict
-                states = [0, 0, 0, 0]
-                for key in config:
-                    if dic[key]:
-                        states[config[key][0]] = config[key][1]
-                states[3] = int(keys.state('l'))
-                state = ''.join([str(n) for n in states])
-                if state != lastState:
-                    lastState = state
-                    if ser:
-                        send_arduino(msg=state, serial_connection=ser)
-                    else:
-                        print(state)
-                if ser:
-                    arduino_string = receive_arduino(serial_connection=ser)
-                    if valid_arduino_string(arduino_string):
-                        v1, v2, v3 = arduino_string.split(':')
-                        rov.sensor = {
-                            'tempWater': float(v1),
-                            'pressureWater': float(v2),
-                            'batteryVoltage': float(v3)
-                        }
+    with Pyro4.Proxy("PYRONAME:ROVSyncer") as rov:
+        while rov.run:
+
+            data = {
+                vertical:   int(rov.actuators["vertical"] * 100),
+                starboard:  int(rov.actuators["starboard"] * 100),
+                port:       int(rov.actuators["port"] * 100),
+                lights:     int(rov.actuators['lights'])
+            }
+            message = "vertical={vertical};starboard={starboard};port={port};lights={lights}".format(**data)
+            if ser:
+                send_arduino(msg=message, serial_connection=ser)
+            else:
+                print(message)
+            if ser:
+                arduino_string = receive_arduino(serial_connection=ser)
+                if valid_arduino_string(arduino_string):
+                    v1, v2, v3 = arduino_string.split(':')
+                    rov.sensor = {
+                        'tempWater': float(v1),
+                        'pressureWater': float(v2),
+                        'batteryVoltage': float(v3)
+                    }
 
 
 def senser():

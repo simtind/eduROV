@@ -10,27 +10,89 @@ document.onkeydown = function(evt) {
     evt = evt || window.event;
     if (evt.keyCode != last_key){
         last_key = evt.keyCode;
-        if (!handle_in_browser(evt.keyCode)){
-            send_keydown(evt.keyCode);
+        if (MOTOR_KEYS.indexOf(keycode) > -1 && !stat.armed){
+            if (confirm("The ROV is not armed, do you want to arm it?")) {
+                toggle_armed();
+            }
+        }
+        var shouldUpdateActuators = false;
+        switch (evt.KeyCode) {
+            case keycodes.q:
+                actuators["port"] = 1.0;
+                shouldUpdateActuators = true;
+                break;
+            case keycodes.w:
+                actuators["vertical"] = 1.0;
+                shouldUpdateActuators = true;
+                break;
+            case keycodes.e:
+                actuators["starboard"] = 1.0;
+                shouldUpdateActuators = true;
+                break;
+            case keycodes.a:
+                actuators["port"] = -1.0;
+                shouldUpdateActuators = true;
+                break;
+            case keycodes.s:
+                actuators["vertical"] = -1.0;
+                shouldUpdateActuators = true;
+                break;
+            case keycodes.d:
+                actuators["starboard"] = -1.0;
+                shouldUpdateActuators = true;
+                break;
+            case keycodes.l:
+                toggle_light();
+                shouldUpdateActuators = true;
+                break;
+            case keycodes.enter:
+                toggle_armed();
+            case keycodes.esc
+                if (stat.cinema){
+                    toggle_cinema();
+                }
+                break;
+            case keycodes.c:
+                toggle_cinema();
+                break;
+        }
+
+        if (shouldUpdateActuators) {
+            updateActuators();
         }
     }
 }
 
 document.onkeyup = function(evt) {
-    last_key = 0;
-    send_keyup(evt.keyCode);
-}
+    var shouldUpdateActuators = false;
+    switch (evt.KeyCode) {
+        case keycodes.q:
+            actuators["port"] = 0.0;
+            shouldUpdateActuators = true;
+            break;
+        case keycodes.w:
+            actuators["vertical"] = 0.0;
+            shouldUpdateActuators = true;
+            break;
+        case keycodes.e:
+            actuators["starboard"] = 0.0;
+            shouldUpdateActuators = true;
+            break;
+        case keycodes.a:
+            actuators["port"] = 0.0;
+            shouldUpdateActuators = true;
+            break;
+        case keycodes.s:
+            actuators["vertical"] = 0.0;
+            shouldUpdateActuators = true;
+            break;
+        case keycodes.d:
+            actuators["starboard"] = 0.0;
+            shouldUpdateActuators = true;
+            break;
+    }
 
-function send_keydown(keycode){
-    var xhttp = new XMLHttpRequest();
-    xhttp.open("GET", "/keydown="+keycode, true);
-    xhttp.setRequestHeader("Content-Type", "text/html");
-    xhttp.send(null);
-}
-
-function send_keyup(keycode){
-    var xhttp = new XMLHttpRequest();
-    xhttp.open("GET", "/keyup="+keycode, true);
-    xhttp.setRequestHeader("Content-Type", "text/html");
-    xhttp.send(null);
+    if (shouldUpdateActuators) {
+        updateActuators();
+    }
 }
