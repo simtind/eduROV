@@ -23,7 +23,7 @@ function sleep(ms) {
 
 function postActuators() {
     var xhttp = new XMLHttpRequest();
-    xhttp.open("POST", "/actuator", true);
+    xhttp.open("POST", "/actuator.json", true);
     xhttp.setRequestHeader("Content-Type", "application/json");
     xhttp.onreadystatechange = function () {
         if (xhttp.readyState === 4 && xhttp.status === 200) {

@@ -10,7 +10,7 @@ document.onkeydown = function(evt) {
     evt = evt || window.event;
     if (evt.keyCode != last_key){
         last_key = evt.keyCode;
-        if (MOTOR_KEYS.indexOf(keycode) > -1 && !stat.armed){
+        if (MOTOR_KEYS.indexOf(evt.keyCode) > -1 && !stat.armed){
             if (confirm("The ROV is not armed, do you want to arm it?")) {
                 toggle_armed();
             }
@@ -58,7 +58,7 @@ document.onkeydown = function(evt) {
         }
 
         if (shouldUpdateActuators) {
-            updateActuators();
+            postActuators();
         }
     }
 }
@@ -93,6 +93,6 @@ document.onkeyup = function(evt) {
     }
 
     if (shouldUpdateActuators) {
-        updateActuators();
+        postActuators();
     }
 }
