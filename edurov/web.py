@@ -86,7 +86,9 @@ class RequestHandler(server.BaseHTTPRequestHandler):
     def do_POST(self):
 
         content_len = self.headers.get('Content-Length', None)
-        if self.headers.get('Content-Type', 'invalid') == 'application/json':
+        content_type =  self.headers.get('Content-Type', 'invalid')
+
+        if content_type == 'application/json':
             try:
                 if content_len is None:
                     raise Exception(411, "Content-length required")
@@ -110,9 +112,9 @@ class RequestHandler(server.BaseHTTPRequestHandler):
                 warning(message=message, filter='default')
                 self.send_error(ex.args[0], ex.args[1])
             finally:
+                self.send_header('Content-type', 'application/json')
                 self.end_headers()
-
-        else:
+        elif content_type == 'application/text':
             try:
                 if self.path == '/':
                     raise ValueError(f'Unknown path {self.path}. {self.requestline}.')
@@ -134,6 +136,7 @@ class RequestHandler(server.BaseHTTPRequestHandler):
             except Exception as ex:
                 self.send_error(ex.args[0], ex.args[1])
             finally:
+                self.send_header('Content-type', 'application/text')
                 self.end_headers()
 
     def serve_content(self, content, content_type='text/html'):

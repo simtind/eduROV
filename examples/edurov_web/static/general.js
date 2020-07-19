@@ -25,14 +25,7 @@ function postActuators() {
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/actuator.json", true);
     xhttp.setRequestHeader("Content-Type", "application/json");
-    xhttp.onreadystatechange = function () {
-        if (xhttp.readyState === 4 && xhttp.status === 200) {
-            var json = JSON.parse(xhttp.responseText);
-            console.log(json.vertical + ", " + json.port + ", " + json.starboard);
-        }
-    };
-    var data = JSON.stringify(actuators);
-    xhttp.send(data);
+    xhttp.send(JSON.stringify(actuators));
 }
 
 function send_keydown(keycode){

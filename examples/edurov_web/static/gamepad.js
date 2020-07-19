@@ -22,6 +22,13 @@ function buttonPressed(b) {
     return b == 1.0;
 }
 
+function cartesian2Polar(x, y){
+    distance = Math.sqrt(x*x + y*y)
+    radians = Math.atan2(y,x) //This takes y first
+    polarCoor = { distance:distance, radians:radians }
+    return polarCoor
+}
+
 function pollGamepad() {
     var gamepads = navigator.getGamepads();
     if (gamepads.length <= gamepadIndex || gamepads[gamepadIndex] == null) {
@@ -34,20 +41,29 @@ function pollGamepad() {
     var lightButton = gamepad.buttons[2];
     var cinemaButton = gamepad.buttons[1];
 
-    var fForward = gamepad.axes[3];
-    var fDeltaRotate = gamepad.axes[2];
+    var polar = cartesian2Polar(gamepad.axes[3], gamepad.axes[2]); 
+    polar.distance = Math.min(polar.distance, 1.0);
+    if (polar.radians > Math.PI) {
+        polar.distance *= -1;
+        polar.radians -= Math.PI;
+    }
 
-    actuators["port"] = 2 * fForward + fDeltaRotate;
-    actuators["starboard"] = 2 * fForward - fDeltaRotate;
+    polar.radians /= Math.PI;
+
+    actuators["port"] = polar.distance * polar.radians;
+    actuators["starboard"] = polar.distance * (1 - polar.radians);
     actuators["vertical"] = gamepad.axes[1];
 
     if (buttonPressed(armedButton) && !armed_pressed) {
         toggle_armed();
+    }
+    armed_pressed = buttonPressed(armedButton);
+
+   if (!stat.armed) {
         actuators["port"] = 0.0;
         actuators["starboard"] = 0.0;
         actuators["vertical"] = 0.0;
     }
-    armed_pressed = buttonPressed(armedButton);
 
     if (buttonPressed(lightButton) && !light_pressed) {
         toggle_light();
