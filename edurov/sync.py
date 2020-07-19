@@ -228,7 +228,12 @@ class ROVSyncer(object):
 
     def __init__(self):
         self._sensor = {'time': time.time()}
-        self._actuator = {}
+        self._actuator = {
+            "vertical":     0.0,
+            "starboard":    0.0,
+            "port":         0.0,
+            'lights':       0.0
+        }
         self._run = True
 
     @property
