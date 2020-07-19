@@ -47,7 +47,7 @@ document.onkeydown = function(evt) {
                 break;
             case keycodes.enter:
                 toggle_armed();
-            case keycodes.esc
+            case keycodes.esc:
                 if (stat.cinema){
                     toggle_cinema();
                 }
