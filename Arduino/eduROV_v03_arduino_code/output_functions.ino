@@ -1,8 +1,8 @@
 // Output settings
-int vertical = 0;
-int starboard = 0;
-int port = 0;
-int lights = 0;
+volatile int vertical = 0;
+volatile int starboard = 0;
+volatile int port = 0;
+volatile int lights = 0;
 
 // Output handler function, implements soft PWM across all motor outputs
 void updateOutput() {
@@ -10,42 +10,48 @@ void updateOutput() {
   static bool vertical_active   = false;
   static bool port_active       = false;
   static bool starboard_active  = false;
+  static int vertical_cached   = 0;
+  static int port_cached       = 0;
+  static int starboard_cached  = 0;
 
   if (period == 0)
   {
-    if (vertical != 0)
+    // Update local cache of state data once every full period so we don't 
+    // get glitches when the output value is updated.
+    vertical_cached   = vertical;
+    port_cached       = port;
+    starboard_cached  = starboard;
+    
+    if (!vertical_active && vertical_cached != 0)
     {
-      digitalWrite(ch1a, vertical  >= 0 ? LOW : HIGH);
-      digitalWrite(ch2a, vertical  >= 0 ? LOW : HIGH);
+      digitalWrite(ch1a, vertical_cached  >= 0 ? LOW : HIGH);
+      digitalWrite(ch2a, vertical_cached  >= 0 ? LOW : HIGH);
       vertical_active   = true;
-      Serial.println(String("t:") + period + " Enable vertical channels"); 
     }
-    if (starboard != 0) {
-      digitalWrite(ch3a, starboard >= 0 ? LOW : HIGH);
+    if (!starboard_active && starboard_cached != 0) {
+      digitalWrite(ch3a, starboard_cached >= 0 ? LOW : HIGH);
       starboard_active  = true;      
     }
-    if (port != 0) {
-      digitalWrite(ch4a, port      >= 0 ? LOW : HIGH);
+    if (!port_active && port_cached != 0) {
+      digitalWrite(ch4a, port_cached      >= 0 ? LOW : HIGH);
       port_active       = true;
     }
-    
   }
 
-  if (vertical_active && period > abs(vertical)) {
-    digitalWrite(ch1a, vertical  >= 0 ? HIGH : LOW);
-    digitalWrite(ch2a, vertical  >= 0 ? HIGH : LOW);
+  if (vertical_active && period >= abs(vertical_cached)) {
     vertical_active = false;
-    Serial.println(String("t:") + period + " Lower Vertical channel");
+    digitalWrite(ch1a, vertical_cached  >= 0 ? HIGH : LOW);
+    digitalWrite(ch2a, vertical_cached  >= 0 ? HIGH : LOW);
   }
 
-  if (starboard_active && period > abs(starboard)) {
-    digitalWrite(ch3a, starboard >= 0 ? HIGH : LOW);
+  if (starboard_active && period >= abs(starboard_cached)) {
     starboard_active = false;
+    digitalWrite(ch3a, starboard_cached >= 0 ? HIGH : LOW);
   }
 
-  if (port_active && period > abs(port)) {
-    digitalWrite(ch4a, port >= 0 ? HIGH : LOW);
+  if (port_active && period >= abs(port_cached)) {
     port_active = false;
+    digitalWrite(ch4a, port_cached >= 0 ? HIGH : LOW);
   }
 }
 
@@ -102,7 +108,6 @@ void setOutput(String msg) {
   port      = constrain(port     , -100, 100);
   starboard = constrain(starboard, -100, 100);
 
-  Timer1.restart();
   interrupts();
 
   //LED lights
