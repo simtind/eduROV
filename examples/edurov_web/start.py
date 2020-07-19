@@ -27,7 +27,7 @@ def handle_arduino(ser, rov):
     if not rov.run:
         return
 
-    threading.Timer(0.1, handle_arduino, ser, rov).start()
+    threading.Timer(0.1, handle_arduino, [ser, rov]).start()
 
     data = rov.actuator
     data['vertical'] = int(round(100 * data["vertical"]))

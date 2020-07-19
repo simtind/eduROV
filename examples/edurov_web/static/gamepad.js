@@ -41,17 +41,25 @@ function pollGamepad() {
     var lightButton = gamepad.buttons[2];
     var cinemaButton = gamepad.buttons[1];
 
-    var polar = cartesian2Polar(gamepad.axes[3], gamepad.axes[2]); 
+    var polar = cartesian2Polar(-gamepad.axes[2], -gamepad.axes[3]); 
+
     polar.distance = Math.min(polar.distance, 1.0);
-    if (polar.radians > Math.PI) {
+    if (polar.radians < 0) {
         polar.distance *= -1;
-        polar.radians -= Math.PI;
+        polar.radians *= -1;
     }
 
     polar.radians /= Math.PI;
 
-    actuators["port"] = polar.distance * polar.radians;
-    actuators["starboard"] = polar.distance * (1 - polar.radians);
+    if (polar.distance >= 0) {
+        actuators["port"] = polar.distance * polar.radians;
+        actuators["starboard"] = polar.distance * (1 - polar.radians);
+    }
+    else {
+        actuators["port"] = polar.distance * (1 - polar.radians);
+        actuators["starboard"] = polar.distance * polar.radians;
+    }
+
     actuators["vertical"] = gamepad.axes[1];
 
     if (buttonPressed(armedButton) && !armed_pressed) {
