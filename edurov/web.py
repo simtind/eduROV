@@ -61,10 +61,6 @@ class RequestHandler(server.BaseHTTPRequestHandler):
             self.serve_rov_data('sensor')
         elif self.path.startswith('/actuator.json'):
             self.serve_rov_data('actuator')
-        elif self.path.startswith('/stop'):
-            self.send_response(200)
-            self.end_headers()
-            self.rov.run = False
         else:
             path = os.path.join(self.base_folder, self.path[1:])
             if os.path.isfile(path):
@@ -128,6 +124,8 @@ class RequestHandler(server.BaseHTTPRequestHandler):
                     if content_len is None:
                         raise Exception(411, "Content-length required")
                     self.keys.keydown(key=int(self.rfile.read(int(content_len))))
+                elif self.path.startswith('/stop'):
+                    self.rov.run = False
                 self.send_response(200)
             except ValueError as ex:
                 message = f'An error occurred while handling request. Got error: {str(ex)}'
