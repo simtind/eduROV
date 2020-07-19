@@ -59,12 +59,6 @@ function pollGamepad() {
     }
     armed_pressed = buttonPressed(armedButton);
 
-   if (!stat.armed) {
-        actuators["port"] = 0.0;
-        actuators["starboard"] = 0.0;
-        actuators["vertical"] = 0.0;
-    }
-
     if (buttonPressed(lightButton) && !light_pressed) {
         toggle_light();
     }

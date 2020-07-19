@@ -22,6 +22,13 @@ function sleep(ms) {
 }
 
 function postActuators() {
+
+   if (!stat.armed) {
+        actuators["port"] = 0.0;
+        actuators["starboard"] = 0.0;
+        actuators["vertical"] = 0.0;
+    }
+
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/actuator.json", true);
     xhttp.setRequestHeader("Content-Type", "application/json");
