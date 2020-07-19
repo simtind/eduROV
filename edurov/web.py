@@ -89,16 +89,19 @@ class RequestHandler(server.BaseHTTPRequestHandler):
         content_type =  self.headers.get('Content-Type', 'invalid')
 
         if content_type == 'application/json':
+            post_body = None
+
+            # Read and respond to package
             try:
                 if content_len is None:
                     raise Exception(411, "Content-length required")
                 post_body = json.loads(self.rfile.read(int(content_len)))
+                self.send_response(200)
 
                 if self.path.startswith('/actuator.json'):
-                    self.set_rov_data('actuator', post_body)
+                    pass
                 else:
                     raise ValueError(f'Bad request. Could not find target {self.path}.')
-                self.send_response(200)
             except json.JSONDecodeError as ex:
                 message = f'Could not parse JSON request. Got error: {str(ex)}'
                 warning(message=message, filter='default')
@@ -114,20 +117,29 @@ class RequestHandler(server.BaseHTTPRequestHandler):
             finally:
                 self.send_header('Content-type', 'application/json')
                 self.end_headers()
+
+            # Handle package
+            if self.path.startswith('/actuator.json'):
+                self.set_rov_data('actuator', post_body)
         elif content_type == 'application/text':
+            post_body = None
+
+            # Read and respond to package
             try:
                 if self.path == '/':
                     raise ValueError(f'Unknown path {self.path}. {self.requestline}.')
                 elif self.path.startswith('/keyup'):
                     if content_len is None:
                         raise Exception(411, "Content-length required")
-                    self.keys.keyup(key=int(self.rfile.read(int(content_len))))
+                    post_body = int(self.rfile.read(int(content_len)))
                 elif self.path.startswith('/keydown'):
                     if content_len is None:
                         raise Exception(411, "Content-length required")
-                    self.keys.keydown(key=int(self.rfile.read(int(content_len))))
+                    post_body = int(self.rfile.read(int(content_len)))
                 elif self.path.startswith('/stop'):
-                    self.rov.run = False
+                    pass
+                else:
+                    raise Exception(404, "Unknown POST target")
                 self.send_response(200)
             except ValueError as ex:
                 message = f'An error occurred while handling request. Got error: {str(ex)}'
@@ -138,6 +150,14 @@ class RequestHandler(server.BaseHTTPRequestHandler):
             finally:
                 self.send_header('Content-type', 'application/text')
                 self.end_headers()
+
+            # Handle content
+            if self.path.startswith('/keyup'):
+                self.keys.keyup(key=post_body)
+            elif self.path.startswith('/keydown'):
+                self.keys.keydown(key=post_body)
+            elif self.path.startswith('/stop'):
+                self.rov.run = False
 
     def serve_content(self, content, content_type='text/html'):
         self.send_response(200)
