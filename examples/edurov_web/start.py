@@ -34,8 +34,16 @@ def arduino():
         }
 
         while rov.run:
-            data = rov.actuator
-            data['vertical'] =   int(round(100 * data["vertical"]))
+
+
+def handle_arduino(ser, rov):
+    if !rov.run:
+        return
+    
+    threading.Timer(0.1, handle_arduino, ser, rov).start()
+ 
+    data = rov.actuator
+    data['vertical'] =   int(round(100 * data["vertical"]))
             data['starboard'] =  int(round(100 * data["starboard"]))
             data['port'] =       int(round(100 * data["port"]))
             data['lights'] =     int(round(data['lights']))
@@ -43,8 +51,7 @@ def arduino():
             message = "vertical={vertical};starboard={starboard};port={port};lights={lights}".format(**data)
             if ser:
                 send_arduino(msg=message, serial_connection=ser)
-            else:
-                print(message)
+            print(message)
             if ser:
                 arduino_string = receive_arduino(serial_connection=ser)
                 if valid_arduino_string(arduino_string):
