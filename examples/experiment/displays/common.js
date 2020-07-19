@@ -59,7 +59,7 @@ document.onkeyup = async function(evt) {
 function send_keydown(keycode){
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/keydown", true);
-    xhttp.setRequestHeader("Content-Type", "text/html");
+    xhttp.setRequestHeader("Content-Type", "application/text");
     xhttp.send(str(keycode));
     total_n_keydowns += 1;
 }
@@ -67,7 +67,7 @@ function send_keydown(keycode){
 function send_keyup(keycode){
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/keyup", true);
-    xhttp.setRequestHeader("Content-Type", "text/html");
+    xhttp.setRequestHeader("Content-Type", "application/text");
     xhttp.send(str(keycode));
 }
 

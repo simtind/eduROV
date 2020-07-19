@@ -31,7 +31,7 @@ function postActuators() {
 function send_keydown(keycode){
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/keydown", true);
-    xhttp.setRequestHeader("Content-Type", "text/html");
+    xhttp.setRequestHeader("Content-Type", "application/text");
     xhttp.send(str(keycode));
 }
 
