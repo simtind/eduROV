@@ -28,13 +28,13 @@ void updateOutput() {
       digitalWrite(ch2a, vertical_cached  >= 0 ? LOW : HIGH);
       vertical_active   = true;
     }
-    if (!starboard_active && starboard_cached != 0) {
-      digitalWrite(ch3a, starboard_cached >= 0 ? LOW : HIGH);
-      starboard_active  = true;      
-    }
     if (!port_active && port_cached != 0) {
-      digitalWrite(ch4a, port_cached      >= 0 ? LOW : HIGH);
-      port_active       = true;
+      digitalWrite(ch3a, port_cached >= 0 ? LOW : HIGH);
+      port_active  = true;      
+    }
+    if (!starboard_active && starboard_cached != 0) {
+      digitalWrite(ch4a, starboard_cached      >= 0 ? LOW : HIGH);
+      starboard_active       = true;
     }
   }
 
@@ -44,14 +44,14 @@ void updateOutput() {
     digitalWrite(ch2a, vertical_cached  >= 0 ? HIGH : LOW);
   }
 
-  if (starboard_active && period >= abs(starboard_cached)) {
-    starboard_active = false;
-    digitalWrite(ch3a, starboard_cached >= 0 ? HIGH : LOW);
-  }
-
   if (port_active && period >= abs(port_cached)) {
     port_active = false;
-    digitalWrite(ch4a, port_cached >= 0 ? HIGH : LOW);
+    digitalWrite(ch3a, port_cached >= 0 ? HIGH : LOW);
+  }
+
+  if (starboard_active && period >= abs(starboard_cached)) {
+    starboard_active = false;
+    digitalWrite(ch4a, starboard_cached >= 0 ? HIGH : LOW);
   }
 }
 

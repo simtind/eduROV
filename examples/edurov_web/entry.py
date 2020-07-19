@@ -1,7 +1,11 @@
 import argparse
 import sys
 
-from edurov.utils import valid_resolution, check_requirements
+try:
+    from edurov.utils import valid_resolution, check_requirements
+except ModuleNotFoundError:
+    from ...edurov.utils import valid_resolution, check_requirements
+
 try:
     from .start import main
 except ModuleNotFoundError:

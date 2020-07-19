@@ -93,8 +93,7 @@ class RequestHandler(server.BaseHTTPRequestHandler):
         if self.headers.get('Content-Type', 'invalid') == 'application/json':
             try:
                 if content_len is None:
-                    self.send_411()  # Data length required
-
+                    raise Exception(411, "Content-length required")
                 post_body = json.loads(self.rfile.read(int(content_len)))
 
                 if self.path.startswith('/actuator.json'):
@@ -110,6 +109,10 @@ class RequestHandler(server.BaseHTTPRequestHandler):
                 message = f'An error occurred while handling JSON content. Got error: {str(ex)}'
                 warning(message=message, filter='default')
                 self.send_error(400, message)
+            except Exception as ex:
+                message = f'An error occurred while handling request. Got error: {str(ex)}'
+                warning(message=message, filter='default')
+                self.send_error(ex.args[0], ex.args[1])
             finally:
                 self.end_headers()
 
@@ -119,17 +122,19 @@ class RequestHandler(server.BaseHTTPRequestHandler):
                     raise ValueError(f'Unknown path {self.path}. {self.requestline}.')
                 elif self.path.startswith('/keyup'):
                     if content_len is None:
-                        self.send_411()  # Data length required
+                        raise Exception(411, "Content-length required")
                     self.keys.keyup(key=int(self.rfile.read(int(content_len))))
                 elif self.path.startswith('/keydown'):
                     if content_len is None:
-                        self.send_411()  # Data length required
+                        raise Exception(411, "Content-length required")
                     self.keys.keydown(key=int(self.rfile.read(int(content_len))))
                 self.send_response(200)
             except ValueError as ex:
                 message = f'An error occurred while handling request. Got error: {str(ex)}'
                 warning(message=message, filter='default')
                 self.send_error(400, message)
+            except Exception as ex:
+                self.send_error(ex.args[0], ex.args[1])
             finally:
                 self.end_headers()
 
@@ -173,7 +178,7 @@ class RequestHandler(server.BaseHTTPRequestHandler):
 
     def set_rov_data(self, data_type, values):
         if data_type == 'actuator':
-            self.rov.actuator = json.loads(values)
+            self.rov.actuator = values
         else:
             warning('Unable to process data_type {}'.format(data_type))
 
