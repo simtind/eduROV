@@ -25,6 +25,12 @@ def valid_arduino_string(arduino_string):
 def arduino():
     ser = serial_connection()
     with Pyro4.Proxy("PYRONAME:ROVSyncer") as rov:
+
+        rov.actuator["vertical"] = 0.0
+        rov.actuator["starboard"] = 0.0
+        rov.actuator["port"] = 0.0
+        rov.actuator['lights'] = 0.0
+
         while rov.run:
 
             data = {
