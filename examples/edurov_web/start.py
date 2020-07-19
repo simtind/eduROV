@@ -1,4 +1,5 @@
 import os
+import threading
 import time
 
 import Pyro4
@@ -22,6 +23,33 @@ def valid_arduino_string(arduino_string):
     return False
 
 
+def handle_arduino(ser, rov):
+    if not rov.run:
+        return
+
+    threading.Timer(0.1, handle_arduino, ser, rov).start()
+
+    data = rov.actuator
+    data['vertical'] = int(round(100 * data["vertical"]))
+    data['starboard'] = int(round(100 * data["starboard"]))
+    data['port'] = int(round(100 * data["port"]))
+    data['lights'] = int(round(data['lights']))
+
+    message = "vertical={vertical};starboard={starboard};port={port};lights={lights}".format(**data)
+    if ser:
+        send_arduino(msg=message, serial_connection=ser)
+    print(message)
+    if ser:
+        arduino_string = receive_arduino(serial_connection=ser)
+        if valid_arduino_string(arduino_string):
+            v1, v2, v3 = arduino_string.split(':')
+            rov.sensor = {
+                'tempWater': float(v1),
+                'pressureWater': float(v2),
+                'batteryVoltage': float(v3)
+            }
+
+
 def arduino():
     ser = serial_connection()
     with Pyro4.Proxy("PYRONAME:ROVSyncer") as rov:
@@ -33,34 +61,7 @@ def arduino():
             'lights':       0.0
         }
 
-        while rov.run:
-
-
-def handle_arduino(ser, rov):
-    if !rov.run:
-        return
-    
-    threading.Timer(0.1, handle_arduino, ser, rov).start()
- 
-    data = rov.actuator
-    data['vertical'] =   int(round(100 * data["vertical"]))
-            data['starboard'] =  int(round(100 * data["starboard"]))
-            data['port'] =       int(round(100 * data["port"]))
-            data['lights'] =     int(round(data['lights']))
-
-            message = "vertical={vertical};starboard={starboard};port={port};lights={lights}".format(**data)
-            if ser:
-                send_arduino(msg=message, serial_connection=ser)
-            print(message)
-            if ser:
-                arduino_string = receive_arduino(serial_connection=ser)
-                if valid_arduino_string(arduino_string):
-                    v1, v2, v3 = arduino_string.split(':')
-                    rov.sensor = {
-                        'tempWater': float(v1),
-                        'pressureWater': float(v2),
-                        'batteryVoltage': float(v3)
-                    }
+        handle_arduino(ser, rov)
 
 
 def senser():
