@@ -28,10 +28,10 @@ def arduino():
         while rov.run:
 
             data = {
-                'vertical':   int(rov.actuators["vertical"] * 100),
-                'starboard':  int(rov.actuators["starboard"] * 100),
-                'port':       int(rov.actuators["port"] * 100),
-                'lights':     int(rov.actuators['lights'])
+                'vertical':   int(rov.actuator["vertical"] * 100),
+                'starboard':  int(rov.actuator["starboard"] * 100),
+                'port':       int(rov.actuator["port"] * 100),
+                'lights':     int(rov.actuator['lights'])
             }
             message = "vertical={vertical};starboard={starboard};port={port};lights={lights}".format(**data)
             if ser:
