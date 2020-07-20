@@ -62,6 +62,11 @@ function pollGamepad() {
 
     actuators["vertical"] = gamepad.axes[1];
 
+    // Add dead-band so a centered joystick sends 0.
+    actuators["port"] = Math.abs(actuators["port"]) < 0.1 ? 0.0 : actuators["port"];
+    actuators["starboard"] = Math.abs(actuators["starboard"]) < 0.1 ? 0.0 : actuators["starboard"];
+    actuators["vertical"] = Math.abs(actuators["vertical"]) < 0.1 ? 0.0 : actuators["vertical"];
+
     if (buttonPressed(armedButton) && !armed_pressed) {
         toggle_armed();
     }
