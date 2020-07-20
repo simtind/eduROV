@@ -38,7 +38,8 @@ def handle_arduino(ser, rov):
     message = "vertical={vertical};starboard={starboard};port={port};lights={lights}".format(**data)
     if ser:
         send_arduino(msg=message, serial_connection=ser)
-    print(message)
+    else:
+        print(message)
     if ser:
         arduino_string = receive_arduino(serial_connection=ser)
         if valid_arduino_string(arduino_string):
