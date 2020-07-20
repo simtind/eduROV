@@ -86,7 +86,7 @@ function pollGamepad() {
     // - Strength of pivot (nPivSpeed) based on Joystick X input
     // - Blending of pivot vs drive (fPivScale) based on Joystick Y input
     var nPivSpeed = nJoyX;
-    var fPivScale = (abs(nJoyY)>0.3)? 0.0 : (1.0 - abs(nJoyY)/0.3);
+    var fPivScale = (Math.abs(nJoyY)>0.3)? 0.0 : (1.0 - Math.abs(nJoyY)/0.3);
 
     // Calculate final mix of Drive and Pivot
     nMotMixL = (1.0-fPivScale)*nMotPremixL + fPivScale*( nPivSpeed);
