@@ -41,31 +41,61 @@ function pollGamepad() {
     var lightButton = gamepad.buttons[2];
     var cinemaButton = gamepad.buttons[1];
 
-    var polar = cartesian2Polar(-gamepad.axes[2], -gamepad.axes[3]); 
+    // var polar = cartesian2Polar(-gamepad.axes[2], -gamepad.axes[3]);
+//
+    // polar.distance = Math.min(polar.distance, 1.0);
+    // if (polar.radians < 0) {
+    //     polar.distance *= -1;
+    //     polar.radians *= -1;
+    // }
+//
+    // polar.radians /= Math.PI;
+//
+    // if (polar.distance >= 0) {
+    //     actuators["port"] = polar.distance * polar.radians;
+    //     actuators["starboard"] = polar.distance * (1 - polar.radians);
+    // }
+    // else {
+    //     actuators["port"] = polar.distance * (1 - polar.radians);
+    //     actuators["starboard"] = polar.distance * polar.radians;
+    // }
+//
+    // actuators["vertical"] = gamepad.axes[1];
 
-    polar.distance = Math.min(polar.distance, 1.0);
-    if (polar.radians < 0) {
-        polar.distance *= -1;
-        polar.radians *= -1;
+    var nJoyX = -gamepad.axes[2];
+    var nJoyY = -gamepad.axes[3];
+    var nMotPremixL = 0.0;
+    var nMotPremixR = 0.0;
+
+    // Calculate Drive Turn output due to Joystick X input
+    if (nJoyY >= 0) {
+      // Forward
+      nMotPremixL = (nJoyX>=0)? 1.0 : (1.0 + nJoyX);
+      nMotPremixR = (nJoyX>=0)? (1.0 - nJoyX) : 1.0;
+    } else {
+      // Reverse
+      nMotPremixL = (nJoyX>=0)? (1.0 - nJoyX) : 1.0;
+      nMotPremixR = (nJoyX>=0)? 1.0 : (1.0 + nJoyX);
     }
 
-    polar.radians /= Math.PI;
+    // Scale Drive output due to Joystick Y input (throttle)
+    nMotPremixL = nMotPremixL * nJoyY;
+    nMotPremixR = nMotPremixR * nJoyY;
 
-    if (polar.distance >= 0) {
-        actuators["port"] = polar.distance * polar.radians;
-        actuators["starboard"] = polar.distance * (1 - polar.radians);
-    }
-    else {
-        actuators["port"] = polar.distance * (1 - polar.radians);
-        actuators["starboard"] = polar.distance * polar.radians;
-    }
+    // Now calculate pivot amount
+    // - Strength of pivot (nPivSpeed) based on Joystick X input
+    // - Blending of pivot vs drive (fPivScale) based on Joystick Y input
+    var nPivSpeed = nJoyX;
+    var fPivScale = (abs(nJoyY)>0.3)? 0.0 : (1.0 - abs(nJoyY)/0.3);
 
-    actuators["vertical"] = gamepad.axes[1];
+    // Calculate final mix of Drive and Pivot
+    nMotMixL = (1.0-fPivScale)*nMotPremixL + fPivScale*( nPivSpeed);
+    nMotMixR = (1.0-fPivScale)*nMotPremixR + fPivScale*(-nPivSpeed);
 
     // Add dead-band so a centered joystick sends 0.
-    actuators["port"] = Math.abs(actuators["port"]) < 0.1 ? 0.0 : actuators["port"];
-    actuators["starboard"] = Math.abs(actuators["starboard"]) < 0.1 ? 0.0 : actuators["starboard"];
-    actuators["vertical"] = Math.abs(actuators["vertical"]) < 0.1 ? 0.0 : actuators["vertical"];
+    actuators["port"] = Math.abs(nMotMixL) < 0.1 ? 0.0 : nMotMixL;
+    actuators["starboard"] = Math.abs(nMotMixR) < 0.1 ? 0.0 : nMotMixR;
+    actuators["vertical"] = Math.abs(gamepad.axes[1]) < 0.1 ? 0.0 : -gamepad.axes[1];
 
     if (buttonPressed(armedButton) && !armed_pressed) {
         toggle_armed();
