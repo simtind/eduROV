@@ -22,6 +22,9 @@ function sleep(ms) {
 }
 
 function postActuators() {
+    if (typeof postActuators.previous_message == "undefined" ) {
+        postActuators.previous_message = "";
+    }
 
    if (!stat.armed) {
         actuators["port"] = 0.0;
@@ -29,10 +32,17 @@ function postActuators() {
         actuators["vertical"] = 0.0;
     }
 
+    message = JSON.stringify(actuators);
+    if (message == postActuators.previous_message) {
+        return;
+    }
+
     var xhttp = new XMLHttpRequest();
     xhttp.open("POST", "/actuator.json", true);
     xhttp.setRequestHeader("Content-Type", "application/json");
-    xhttp.send(JSON.stringify(actuators));
+    xhttp.send(message);
+
+    postActuators.previous_message = message;
 }
 
 function send_keydown(keycode){
