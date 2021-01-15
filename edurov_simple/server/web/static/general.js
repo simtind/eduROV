@@ -45,13 +45,6 @@ function postActuators() {
     postActuators.previous_message = message;
 }
 
-function send_keydown(keycode){
-    var xhttp = new XMLHttpRequest();
-    xhttp.open("POST", "/keydown", true);
-    xhttp.setRequestHeader("Content-Type", "application/text");
-    xhttp.send(str(keycode));
-}
-
 function toggle_cinema(){
     stat.cinema = !stat.cinema;
     set_cinema(stat.cinema);

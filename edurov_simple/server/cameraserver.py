@@ -1,9 +1,15 @@
 import io
 import multiprocessing
 import asyncio
+import subprocess
+import time
+
 import websockets as websockets
 
-import picamera
+from edurov_simple.hardware import is_raspberrypi
+
+if is_raspberrypi():
+    import picamera
 
 class StreamingOutput(object):
     """Defines output for the picamera, used by request server"""
@@ -29,12 +35,22 @@ class StreamingOutput(object):
 
 class CameraServer(multiprocessing.Process):
     """ Creates a new process that Exposes the raspberry pi camera as a websocket image stream """
-    def __init__(self, video_resolution='1024x768', fps=30, port=8080):
+    def __init__(self, video_resolution='1024x768', fps=30, port=8080, debug=False):
         self.port = port
         self.video_resolution = video_resolution.split('x')
         self.fps = fps
-        super().__init__(target=self._runner, daemon=True)
-        self.start()
+        self.start_time = time.time()
+        self.debug = debug
+
+        if is_raspberrypi():
+            camera = subprocess.check_output(['vcgencmd', 'get_camera']).decode().rstrip()
+            if '0' in camera:
+                raise RuntimeError('Camera not enabled or connected properly')
+
+            super().__init__(target=self._runner, daemon=True)
+            self.start()
+        else:
+            print("No mock module available for camera, skipping")
 
     async def _handler(self, websocket, path):
         while True:
@@ -46,7 +62,15 @@ class CameraServer(multiprocessing.Process):
             self.camera_stream = StreamingOutput()
             camera.start_recording(self.camera_stream, format='mjpeg')
 
-            with websockets.serve(self._handler, "localhost", self.port) as server:
-                asyncio.get_event_loop().run_until_complete(server)
-                asyncio.get_event_loop().run_forever()
+            server = websockets.serve(self._handler, "localhost", self.port)
+            print(f"Camera websocket server started at {get_host_ip()}:{self.port}")
+            asyncio.get_event_loop().run_until_complete(server)
+            asyncio.get_event_loop().run_forever()
+
+        print('Shutting down camera server')
+        if self.debug:
+            finish = time.time()
+            seconds = finish - self.start_time
+            framerate = self.camera_stream.count / (finish - self.start_time)
+            print(f'Sent {self.camera_stream.count} images in {seconds:.1f} seconds at {framerate:.2f} fps')
 

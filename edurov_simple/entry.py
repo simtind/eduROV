@@ -1,18 +1,12 @@
 import argparse
-import sys
 
-try:
-    from edurov.utils import valid_resolution, check_requirements
-except ModuleNotFoundError:
-    from utils import valid_resolution, check_requirements
-
-try:
-    from .start import main
-except ModuleNotFoundError:
-    from start import main
+from edurov_simple.utility import get_host_ip
+from edurov_simple.server.cameraserver import CameraServer
+from edurov_simple.server.ioserver import IOServer
+from edurov_simple.server.webserver import WebpageServer
 
 
-def edurov_web(args=None):
+def edurov_web():
     parser = argparse.ArgumentParser(
         description='Start the Engage eduROV web server')
     parser.add_argument(
@@ -31,8 +25,14 @@ def edurov_web(args=None):
         '-port',
         metavar='SERVER_PORT',
         type=int,
-        default=8000,
-        help="which port the server should serve it's content (default 8000)")
+        default=80,
+        help="which port the server should serve it's main page (default 80)")
+    parser.add_argument(
+        '-serial',
+        metavar='SERIAL_PORT',
+        type=str,
+        default='/dev/ttyACM0',
+        help="which serial port the script should try to use to communicate with the Arduino module")
     parser.add_argument(
         '-d', '--debug',
         action='store_true',
@@ -40,13 +40,12 @@ def edurov_web(args=None):
 
     args = parser.parse_args()
 
-    if check_requirements():
-        video_res = valid_resolution(args.r)
-        main(
-            video_resolution=video_res,
-            fps=args.fps,
-            server_port=args.port,
-            debug=args.debug)
+    CameraServer(video_resolution=args.r, fps=args.fps, debug=args.debug)
+    IOServer(args.serial, debug=args.debug)
+
+    with WebpageServer(server_address=('', args.port), debug=args.debug) as s:
+        print(f'Visit the webpage at {get_host_ip()}:{args.port}')
+        s.serve_forever()
 
 
 if __name__ == '__main__':

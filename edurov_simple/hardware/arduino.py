@@ -1,10 +1,4 @@
-import multiprocessing
-import threading
-import asyncio
 import serial_asyncio
-from serial import SerialException
-
-from edurov.utils import warning
 
 
 class Arduino(object):
@@ -12,7 +6,9 @@ class Arduino(object):
     def __init__(self, serial_port, baud_rate=115200):
         self.serial_port = serial_port
         self.baud_rate = baud_rate
+        self.initialize().close()
 
+    async def initialize(self):
         self._reader, self._writer \
             = await serial_asyncio.open_serial_connection(port=self.serial_port, baudrate=self.baud_rate)
 
