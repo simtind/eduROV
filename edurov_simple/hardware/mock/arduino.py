@@ -1,10 +1,12 @@
 import asyncio
 import random
+import logging
 
 
 class Arduino(object):
     """ Utility functions to test Arduino sensor read outside of RoV """
     def __init__(self, serial_port, baud_rate=115200):
+        self.logger = logging.getLogger("Arduino")
         random.seed()
         # Set some reasonable default values
         self.sensors = {
@@ -13,7 +15,7 @@ class Arduino(object):
                    'batteryVoltage': 12.2
                }
 
-        print(f"Opening mock serial port on {serial_port} at {baud_rate} baud.")
+        self.logger.debug(f"Opening mock serial port on {serial_port} at {baud_rate} baud.")
 
     async def get_sensors(self):
         self.sensors['tempWater'] += random.uniform(-.1, .1)
@@ -28,5 +30,5 @@ class Arduino(object):
         port      = int(round(100 * values["port"]))
         lights    = int(round(values['lights']))
 
-        print(f"vertical={vertical};starboard={starboard};port={port};lights={lights}".encode('ascii'))
+        self.logger.debug(f"vertical={vertical};starboard={starboard};port={port};lights={lights}".encode('ascii'))
         await asyncio.sleep(.2)

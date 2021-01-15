@@ -1,4 +1,5 @@
 import argparse
+import logging
 
 from edurov_simple.utility import get_host_ip
 from edurov_simple.server.cameraserver import CameraServer
@@ -34,16 +35,19 @@ def edurov_web():
         default='/dev/ttyACM0',
         help="which serial port the script should try to use to communicate with the Arduino module")
     parser.add_argument(
-        '-d', '--debug',
-        action='store_true',
-        help='set to print debug information')
+        '--loglevel',
+        type=str,
+        default='INFO',
+        help='Set log level')
 
     args = parser.parse_args()
 
-    CameraServer(video_resolution=args.r, fps=args.fps, debug=args.debug)
-    IOServer(args.serial, debug=args.debug)
+    logging.basicConfig(level=args.loglevel)
 
-    with WebpageServer(server_address=('', args.port), debug=args.debug) as s:
+    CameraServer(video_resolution=args.r, fps=args.fps)
+    IOServer(args.serial)
+
+    with WebpageServer(server_address=('', args.port)) as s:
         print(f'Visit the webpage at {get_host_ip()}:{args.port}')
         s.serve_forever()
 

@@ -1,13 +1,17 @@
+import logging
 import multiprocessing
 import asyncio
 import random
 
 import psutil
 
+from edurov_simple.utility import is_linux
+
 
 class SystemMonitor(object):
     """ Utility functions to read Raspberry pi system state and Sense Hat data asynchronously """
     def __init__(self):
+        self.logger = logging.getLogger("SystemMonitor")
         random.seed()
         self.sensors = {
                             'temp': 50.0,
@@ -21,7 +25,7 @@ class SystemMonitor(object):
     async def get_system_data(self):
         return {
                     'free_space': psutil.disk_usage("/").free,
-                    'cpu_temp': psutil.sensors_temperatures()[0],
+                    'cpu_temp': "N/A" if not is_linux() else psutil.sensors_temperatures()[0],
                     'cpu_load': psutil.cpu_percent()
                 }
 

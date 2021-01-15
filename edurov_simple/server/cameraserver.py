@@ -1,4 +1,5 @@
 import io
+import logging
 import multiprocessing
 import asyncio
 import subprocess
@@ -7,9 +8,11 @@ import time
 import websockets as websockets
 
 from edurov_simple.hardware import is_raspberrypi
+from edurov_simple.utility import get_host_ip
 
 if is_raspberrypi():
     import picamera
+
 
 class StreamingOutput(object):
     """Defines output for the picamera, used by request server"""
@@ -35,12 +38,12 @@ class StreamingOutput(object):
 
 class CameraServer(multiprocessing.Process):
     """ Creates a new process that Exposes the raspberry pi camera as a websocket image stream """
-    def __init__(self, video_resolution='1024x768', fps=30, port=8080, debug=False):
+    def __init__(self, video_resolution='1024x768', fps=30, port=8080):
+        self.logger = logging.getLogger("CameraServer")
         self.port = port
         self.video_resolution = video_resolution.split('x')
         self.fps = fps
         self.start_time = time.time()
-        self.debug = debug
 
         if is_raspberrypi():
             camera = subprocess.check_output(['vcgencmd', 'get_camera']).decode().rstrip()
@@ -50,7 +53,7 @@ class CameraServer(multiprocessing.Process):
             super().__init__(target=self._runner, daemon=True)
             self.start()
         else:
-            print("No mock module available for camera, skipping")
+            self.logger.debug("No mock module available for camera, skipping")
 
     async def _handler(self, websocket, path):
         while True:
@@ -63,14 +66,13 @@ class CameraServer(multiprocessing.Process):
             camera.start_recording(self.camera_stream, format='mjpeg')
 
             server = websockets.serve(self._handler, "localhost", self.port)
-            print(f"Camera websocket server started at {get_host_ip()}:{self.port}")
+            self.logger.info(f"Camera websocket server started at {get_host_ip()}:{self.port}")
             asyncio.get_event_loop().run_until_complete(server)
             asyncio.get_event_loop().run_forever()
 
-        print('Shutting down camera server')
-        if self.debug:
-            finish = time.time()
-            seconds = finish - self.start_time
-            framerate = self.camera_stream.count / (finish - self.start_time)
-            print(f'Sent {self.camera_stream.count} images in {seconds:.1f} seconds at {framerate:.2f} fps')
+        self.logger.info('Shutting down camera server')
+        finish = time.time()
+        seconds = finish - self.start_time
+        framerate = self.camera_stream.count / (finish - self.start_time)
+        self.logger.debug(f'Sent {self.camera_stream.count} images in {seconds:.1f} seconds at {framerate:.2f} fps')
 

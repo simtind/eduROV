@@ -1,16 +1,16 @@
+import asyncio
+import logging
 import serial_asyncio
 
 
 class Arduino(object):
     """ Utility functions to perform Arduino communication asynchronously """
     def __init__(self, serial_port, baud_rate=115200):
+        self.logger = logging.getLogger("Arduino")
         self.serial_port = serial_port
         self.baud_rate = baud_rate
-        self.initialize().close()
-
-    async def initialize(self):
         self._reader, self._writer \
-            = await serial_asyncio.open_serial_connection(port=self.serial_port, baudrate=self.baud_rate)
+            = asyncio.run(serial_asyncio.open_serial_connection(port=self.serial_port, baudrate=self.baud_rate))
 
     async def get_sensors(self):
         received = await self._reader.readline()

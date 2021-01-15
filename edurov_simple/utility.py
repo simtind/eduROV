@@ -1,5 +1,21 @@
 import socket
 import warnings
+import sys
+
+
+def is_linux():
+    return sys.platform.startswith("linux")
+
+
+def is_raspberrypi():
+    if not is_linux():
+        return False
+    try:
+        with open('/sys/firmware/devicetree/base/model', 'r') as m:
+            return 'raspberry pi' in m.read().lower()
+    except Exception:
+        pass
+    return False
 
 
 def get_host_ip():
@@ -13,15 +29,3 @@ def get_host_ip():
     finally:
         s.close()
     return IP
-
-
-def warning(message, filter='error', category=UserWarning):
-    warnings.simplefilter(filter, category)
-    warnings.formatwarning = warning_format
-    warnings.warn(message)
-
-
-def warning_format(message, category, filename, lineno,
-                   file=None, line=None):
-    return 'WARNING:\n  {}: {}\n  File: {}:{}\n'.format(
-        category.__name__, message, filename, lineno)

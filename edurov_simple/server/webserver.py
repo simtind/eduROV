@@ -1,19 +1,20 @@
 """
 Sever classes used in the web method
 """
-
+import logging
 import socketserver
 import time
 from http import server
 from pathlib import Path
 
-from ..utility import get_host_ip, warning
+from ..utility import get_host_ip
 
 
 class RequestHandler(server.BaseHTTPRequestHandler):
     """Request server, handles request from the browser"""
     base_folder = None
     index_file = None
+    logger = logging.getLogger("RequestHandler")
 
     def do_GET(self):
         if self.path == '/':
@@ -25,7 +26,7 @@ class RequestHandler(server.BaseHTTPRequestHandler):
             if path.is_file():
                 self.serve_path(str(path))
             else:
-                warning(message=f'Bad response. {self.requestline}. Could not find {path}', filter='default')
+                self.logger.warning(f'Bad response. {self.requestline}. Could not find {path}')
                 self.send_404()
 
     def do_POST(self):
@@ -67,9 +68,9 @@ class WebpageServer(socketserver.ThreadingMixIn, server.HTTPServer):
     allow_reuse_address = True
     daemon_threads = True
 
-    def __init__(self, server_address, index_file=Path(__file__).parent / "web" / "index.html", debug=False):
+    def __init__(self, server_address, index_file=Path(__file__).parent / "web" / "index.html"):
+        self.logger = logging.getLogger("WebpageServer")
         self.start = time.time()
-        self.debug = debug
         RequestHandler.base_folder = Path(index_file).parent.absolute()
         RequestHandler.index_file = Path(index_file)
         super(WebpageServer, self).__init__(server_address, RequestHandler)
@@ -78,8 +79,7 @@ class WebpageServer(socketserver.ThreadingMixIn, server.HTTPServer):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        print('Shutting down http server')
-        if self.debug:
-            finish = time.time()
-            print(f'HTTP server was live for {finish - self.start:.1f} seconds')
+        self.logger.info('Shutting down http server')
+        finish = time.time()
+        self.logger.debug(f'HTTP server was live for {finish - self.start:.1f} seconds')
 

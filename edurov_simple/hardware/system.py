@@ -1,11 +1,11 @@
-import multiprocessing
-import asyncio
+import logging
 import psutil
 
 
 class SystemMonitor(object):
     """ Utility functions to read Raspberry pi system state and Sense Hat data asynchronously """
     def __init__(self):
+        self.logger = logging.getLogger("SystemMonitor")
         self.sense = SenseHat()
 
     async def get_system_data(self):
