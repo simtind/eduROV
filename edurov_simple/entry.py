@@ -44,8 +44,12 @@ def edurov_web():
 
     logging.basicConfig(level=args.loglevel)
 
-    CameraServer(video_resolution=args.r, fps=args.fps)
-    IOServer(args.serial)
+    camera = CameraServer(args.r, args.fps, args.loglevel)
+    io = IOServer(args.serial, args.loglevel)
+
+    logging.info("Waiting for websocket servers to go online before starting web server")
+    camera.ready.wait()
+    io.ready.wait()
 
     with WebpageServer(server_address=('', args.port)) as s:
         print(f'Visit the webpage at {get_host_ip()}:{args.port}')

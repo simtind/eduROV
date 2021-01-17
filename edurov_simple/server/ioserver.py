@@ -13,16 +13,17 @@ from ..utility import get_host_ip
 
 class IOServer(multiprocessing.Process):
     """ Creates a new process that Exposes the ROV sensors and actuators as a websocket data stream """
-    def __init__(self, arduino_serial_port='/dev/ttyACM0', arduino_baud_rate=115200, port=8081):
-        self.logger = logging.getLogger("IOServer")
+    def __init__(self, arduino_serial_port='/dev/ttyACM0', arduino_baud_rate=115200, loglevel="INFO", port=8081):
         self.port = port
         self.serial_port = arduino_serial_port
         self.baud_rate = arduino_baud_rate
+        self.loglevel = loglevel
         self.sensors = dict()
         self.actuators = dict()
         self.start_time = time.time()
         self.sensor_condition = None
         self.actuator_lock = None
+        self.ready = multiprocessing.Event()
 
         super().__init__(target=self._runner, daemon=True)
         self.start()
@@ -50,14 +51,14 @@ class IOServer(multiprocessing.Process):
                     self.sensor_condition.notify_all()
 
     async def _send_sensors(self, websocket):
-        while websocket.open:
+        while True:
             self.logger.debug("Wait for sensor data to arrive")
             async with self.sensor_condition:
                 await self.sensor_condition.wait()
                 await websocket.send(json.dumps(self.sensors))
 
     async def _receive_input(self, websocket):
-        while websocket.open:
+        while True:
             self.logger.debug("Wait for incoming websocket data")
             data = await websocket.recv()
             data = json.loads(data)
@@ -67,31 +68,29 @@ class IOServer(multiprocessing.Process):
                 await self.arduino.set_actuators(self.actuators)
 
     async def _handler(self, websocket, path):
-        self.logger.debug("Testing sockets")
-        name = await websocket.recv()
-        self.logger.debug(f"< {name}")
-
-        greeting = f"Hello {name}!"
-
-        await websocket.send(greeting)
-        self.logger.debug(f"> {greeting}")
+        self.logger.info(f"I/O server received connection from {path}")
+        start_cmd = await websocket.recv()
         send = asyncio.get_event_loop().create_task(self._send_sensors(websocket))
         receive = asyncio.get_event_loop().create_task(self._receive_input(websocket))
         await websocket.wait_closed()
-        await send
-        await receive
+        send.cancel()
+        receive.cancel()
 
     def _runner(self):
+        logging.basicConfig(level=self.loglevel)
+        self.logger = logging.getLogger("IOServer")
         self.sensor_condition = asyncio.Condition()
         self.actuator_lock = asyncio.Lock()
 
-        server = websockets.serve(self._handler, "localhost", self.port)
+        server = websockets.serve(self._handler, get_host_ip(), self.port)
         self.logger.info(f"I/O websocket server started at ws://{get_host_ip()}:{self.port}")
 
-        self.logger.debug("Ready to send sensor data")
         self.arduino = arduino.Arduino(self.serial_port, self.baud_rate)
         asyncio.get_event_loop().create_task(self._collect_arduino_sensors(self.arduino, server))
         asyncio.get_event_loop().create_task(self._collect_system_sensors(server))
+        self.logger.debug("Ready to send sensor data")
+
+        self.ready.set()
 
         asyncio.get_event_loop().run_until_complete(server)
         asyncio.get_event_loop().run_forever()

@@ -1,3 +1,5 @@
+pillow
+cv2
 pyserial~=3.5
 setuptools~=51.1.2
 asyncio~=3.4.3

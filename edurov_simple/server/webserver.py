@@ -19,6 +19,10 @@ class RequestHandler(server.BaseHTTPRequestHandler):
     def do_GET(self):
         if self.path == '/':
             self.redirect('/index.html', redir_type=301)
+        elif '?cameraserver' in self.path:
+            self.serve_content(f'ws://{get_host_ip()}:8080'.encode('utf-8', 'ignore'))
+        elif '?ioserver' in self.path:
+            self.serve_content(f'ws://{get_host_ip()}:8081'.encode('utf-8', 'ignore'))
         elif self.path.startswith('/http') or self.path.startswith('/www'):
             self.redirect(self.path[1:])
         else:

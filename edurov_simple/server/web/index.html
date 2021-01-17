@@ -1,12 +1,14 @@
 <html>
 <head>
     <title>eduROV</title>
-    <!--script src="./static/dynamic.js"></script>
-    <script src="./static/general.js"></script>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
+    <script src="./scripts/dynamic.js"></script>
+    <!--script src="./static/general.js"></script>
     <script src="./static/gamepad.js"></script-->
-    <script src="./static/websockets.js"></script>
-    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <script src="./scripts/websocket/ioclient.js"></script>
+    <script src="./scripts/websocket/cameraclient.js"></script>
+    <link rel="shortcut icon" href="./static/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="./static/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="./static/style.css">
     <link rel="stylesheet" type="text/css" href="./static/bootstrap.css">
 </head>
@@ -95,7 +97,7 @@
         </div>
     </div>
     <div class="center-panel">
-        <img id="image" src="stream.mjpg">
+        <img id="image" src="./static/tinyblack.gif">
         <img class="rollOverlay" id="rollOverlay" src="./static/roll.png">
     </div>
     <div class="d-none d-md-block side-panel">
