@@ -2,17 +2,15 @@
 <head>
     <title>eduROV</title>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
-    <script src="./scripts/dynamic.js"></script>
-    <!--script src="./static/general.js"></script>
+    <!--script src="./scripts/dynamic.js"></script>
+    <script src="./static/general.js"></script>
     <script src="./static/gamepad.js"></script-->
-    <script src="./scripts/websocket/ioclient.js"></script>
-    <script src="./scripts/websocket/cameraclient.js"></script>
     <link rel="shortcut icon" href="./static/favicon.ico" type="image/x-icon">
     <link rel="icon" href="./static/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" type="text/css" href="./static/style.css">
     <link rel="stylesheet" type="text/css" href="./static/bootstrap.css">
 </head>
-<body onload="set_size()">
+<body>
 
 <div class="grid-container">
     <div class="d-none d-md-block side-panel " style="display:none;">
@@ -97,7 +95,7 @@
         </div>
     </div>
     <div class="center-panel">
-        <img id="image" src="./static/tinyblack.gif">
+		<canvas id="stream_canvas"></canvas>
         <img class="rollOverlay" id="rollOverlay" src="./static/roll.png">
     </div>
     <div class="d-none d-md-block side-panel">
@@ -170,4 +168,6 @@
 </div>
 
 </body>
+<script type="module" src="./scripts/websocket/ioclient.js"></script>
+<script type="module" src="./scripts/websocket/cameraclient.js"></script>
 </html>

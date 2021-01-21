@@ -1,6 +1,7 @@
-import asyncio
 import io
 import logging
+import threading
+
 import picamera
 
 
@@ -10,7 +11,7 @@ class StreamingOutput(object):
     def __init__(self):
         self.frame = None
         self.buffer = io.BytesIO()
-        self.condition = asyncio.Condition()
+        self.condition = threading.Condition()
         self.count = 0
 
     def write(self, buf):

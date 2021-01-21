@@ -1,3 +1,4 @@
+import base64
 import logging
 import multiprocessing
 import asyncio
@@ -24,9 +25,11 @@ class CameraServer(multiprocessing.Process):
 
     async def _send_frames(self, websocket):
         while True:
-            async with self.camera.stream.condition:
+            with self.camera.stream.condition:
+                self.camera.stream.condition.wait()
                 if self.camera.stream.frame is not None:
-                    await websocket.send(self.camera.stream.frame)
+                    self.logger.debug("Send frame")
+                    await websocket.send("data:image/jpg;base64," + base64.b64encode(self.camera.stream.frame).decode())
 
     async def _handler(self, websocket, path):
         self.logger.info(f"Camera server received connection from {path}")

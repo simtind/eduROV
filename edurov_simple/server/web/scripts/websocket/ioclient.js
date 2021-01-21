@@ -1,7 +1,8 @@
 
 class IOClient{
+    client = null;
 
-    dummyactuators() {
+    DummyActuators() {
         this.actuators["vertical" ] += Math.random() - 0.5;
         this.actuators["starboard"] += Math.random() - 0.5;
         this.actuators["port"     ] += Math.random() - 0.5;
@@ -15,7 +16,7 @@ class IOClient{
         console.log("I/O Server Connection made");
         this.client.send("Start");
 
-        setInterval(dummyactuators, 1000);
+        setInterval(self.DummyActuators, 1000);
     }
 
     MessageHandler(event) {
@@ -32,12 +33,6 @@ class IOClient{
         console.log("I/O server connection closed");
     }
 
-    Connect(xhttp) {
-        // Create WebSocket connection.
-        this.client = new WebSocket(xhttp.responseText);
-        console.log("Received I/O server url", xhttp.responseText)
-    }
-
     constructor() {
         this.actuators = {
             "vertical"  :0.0,
@@ -45,22 +40,27 @@ class IOClient{
             "port"      :0.0,
             "lights"    :0.0
         }
+
+        var self = this;
+
+        console.log("Starting I/O server");
+        // Get I/O Server address, and start websocket session
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function(){
+            if (xhttp.readyState == 4 && xhttp.status == 200) {
+                // Create WebSocket connection.
+                self.client = new WebSocket(xhttp.responseText);
+                console.log("Received I/O server url", xhttp.responseText)
+                self.client.addEventListener('open', function() {self.OpenHandler(event)});
+                self.client.addEventListener('close', function() {self.CloseHandler(event);});
+                self.client.addEventListener('message', function() {self.MessageHandler(event);});
+
+                xhttp = null;
+            }
+        }
+        xhttp.open("GET", "?ioserver", true);
+        xhttp.send();
     }
 }
 
-
-console.log("Starting I/O server");
 var io = new IOClient();
-
-// Get Camera Server address, and start websocket session
-var xhttp = new XMLHttpRequest();
-xhttp.onreadystatechange = function(){
-    if (xhttp.readyState == 4 && xhttp.status == 200) {
-        io.Connect(this);
-        io.client.addEventListener('open', function (event) {io.OpenHandler(event);});
-        io.client.addEventListener('close', function (event) {io.CloseHandler(event);});
-        io.client.addEventListener('message', function (event) {io.MessageHandler(event);});
-    }
-}
-xhttp.open("GET", "?ioserver", true);
-xhttp.send();
